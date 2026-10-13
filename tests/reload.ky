@@ -9,6 +9,9 @@ if(!invalid) { throw "invalid saved volume accepted"; }
 invalid=false;
 try { musicIcon("/definitely/missing/icon.png"); } catch(error) { invalid=true; }
 if(!invalid) { throw "missing icon accepted"; }
+invalid=false;
+try { musicIcon("build/demo/catalog.json"); } catch(error) { invalid=true; }
+if(!invalid) { throw "non-image icon accepted"; }
 console.log("MUSIC_RELOAD_OK");
 
 } catch(error) { throw error; }

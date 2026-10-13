@@ -3,6 +3,7 @@
 #include <QThread>
 #include <QRandomGenerator>
 #include <QIcon>
+#include <QImageReader>
 using namespace kyna::adapter;
 namespace {
 MusicBridge &bridge(void *p){auto s=static_cast<MusicSession*>(p);s->initialize();if(QCoreApplication::instance()->thread()!=QThread::currentThread())throw Failure("KMUSIC1004","Music requires the UI thread");return *s->bridge;}
@@ -11,7 +12,7 @@ constexpr Type eventCallback{KYNA_V2_CALLBACK,0,nullptr,nullptr,pair,2,&nothing}
 constexpr Type timerCallback{KYNA_V2_CALLBACK,0,nullptr,nullptr,nullptr,0,&nothing};
 constexpr Type eventArgs[]{eventCallback},textArgs[]{text},numberArgs[]{number},intArgs[]{integer},afterArgs[]{integer,timerCallback};
 kyna_native_result_v2 open(void*p,const Value*,size_t) noexcept{return guarded([&](Buffers&){bridge(p);return Value{};});}
-kyna_native_result_v2 icon(void*p,const Value*a,size_t) noexcept{return guarded([&](Buffers&){bridge(p);QIcon value(QString::fromStdString(string(a[0])));if(value.isNull())throw Failure("KMUSIC1001","App icon must be a readable local image or Qt resource");QGuiApplication::setWindowIcon(value);return Value{};});}
+kyna_native_result_v2 icon(void*p,const Value*a,size_t) noexcept{return guarded([&](Buffers&){bridge(p);const auto path=QString::fromStdString(string(a[0]));QImageReader reader(path);if(reader.read().isNull())throw Failure("KMUSIC1001","App icon must be a readable local image or Qt resource");QGuiApplication::setWindowIcon(QIcon(path));return Value{};});}
 kyna_native_result_v2 on(void*p,const Value*a,size_t) noexcept{return guarded([&](Buffers&){bridge(p).subscribe(a[0].handle);return Value{};});}
 kyna_native_result_v2 render(void*p,const Value*a,size_t) noexcept{return guarded([&](Buffers&){bridge(p).render(string(a[0]));return Value{};});}
 kyna_native_result_v2 load(void*p,const Value*,size_t) noexcept{return guarded([&](Buffers&b){return b.string(bridge(p).load().toStdString());});}
