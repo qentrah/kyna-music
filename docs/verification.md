@@ -11,3 +11,15 @@ Portable packaging recursively relocates dependency paths, records binary hashes
 The complete local macOS bundle passed its audio smoke with Qt/QML environment paths pointed at nonexistent SDK locations. Apple `codesign --verify --deep --strict` passed. Packaged home, library/queue and search screenshots are saved in `docs/screenshots`.
 
 The 25.5-second video in `docs/videos/kyna-music-macos.mp4` records actual app frames: playback, navigation, play-all queue and live search. It has no audio track. The compact screenshot verifies the 980-pixel layout with the right panel hidden and the transport retained.
+
+## Verified desktop matrix
+
+The final application code at `72a79fae0b5fcb4c1a3dd19aad874c9fcdbd39b7` passed the complete [desktop workflow](https://github.com/qentrah/kyna-music/actions/runs/38350021366) on 13 October 2026:
+
+| Target | Evidence |
+| --- | --- |
+| Windows x86_64 | [Playback, persistence, native launcher and SDK-free package](https://github.com/qentrah/kyna-music/actions/runs/38350021366/job/115144612481) |
+| Linux x86_64 / Ubuntu 24.04 | [Xvfb/PulseAudio application and portable package](https://github.com/qentrah/kyna-music/actions/runs/38350021366/job/115144612343) |
+| macOS ARM64 / macOS 14 | [Application, signature and portable package](https://github.com/qentrah/kyna-music/actions/runs/38350021366/job/115144612507) |
+
+These jobs build against Qt 6.8.3 and the pinned Kyna ABI 2 revision. The separate local macOS 6.11.2-Qt build also passed archive extraction into a relocated path containing spaces. Other CPU/OS combinations, production signatures and notarization are not established by these results.
