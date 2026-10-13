@@ -1,6 +1,6 @@
 # Application architecture
 
-The VM runs `main.ky`, which initializes Kyna state and subscribes one typed `fn(str, str): void` event handler. First use rejects non-main threads before creating any Qt application. Qt clicks enqueue action/payload pairs on the UI thread; Kyna processes them and sends a new JSON view to QML. Qt does not own playlist or queue decisions.
+The VM runs `main.ky`, which initializes Kyna state and subscribes one typed `fn(str, str): void` event handler. The first call must run on the process main thread. If a Qt application already exists, the adapter rejects a non-GUI application or calls from a different Qt thread. Qt clicks enqueue action/payload pairs on the UI thread; Kyna processes them and sends a new JSON view to QML. Qt does not own playlist or queue decisions.
 
 `music_bridge` publishes a versioned C ABI descriptor shared by `ky check` and runtime registration. All calls cross guarded exception boundaries and validate native conversions. Event callbacks and timers are retained until replacement, delivery or session destruction. Timers use the bridge as their Qt context, so destruction cancels pending delivery. QML objects disappear before the bridge and the application.
 
@@ -11,3 +11,5 @@ Storage validates bounded JSON records and uses QSaveFile for atomic replacement
 Typed functions: `musicOpen`, `musicIcon(str)`, `musicOnEvent(fn(str,str):void)`, `musicRender(str)`, `musicLoad():str`, `musicSave(str)`, `musicImport(str):str`, `musicPlay(str)`, `musicToggle`, `musicSeek(int)`, `musicVolume(float)`, `musicStatus():str`, `musicAfter(int,fn():void)`, `musicRandom(int):int`, `musicRun`, `musicQuit`.
 
 Error codes: KMUSIC1001 invalid input/schema, KMUSIC1002 storage or UI initialization, KMUSIC1003 media/file, KMUSIC1004 callback/thread/lifecycle. Runtime errors retain compiler source locations through the Kyna native interface.
+
+Desktop launchers execute the checked Kyna entry point beside the bundled runtime. Windows uses a GUI subsystem executable without a console; macOS uses a standard `.app`; Linux resolves its installed executable path. The packaging icon is rendered from the same SVG selected by `musicIcon` in Kyna. The shipped launcher has a `--smoke` mode that initializes the real UI, retains a timer across GC and exits through the event loop.
