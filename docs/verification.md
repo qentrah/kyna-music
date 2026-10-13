@@ -23,3 +23,9 @@ The final application code at `72a79fae0b5fcb4c1a3dd19aad874c9fcdbd39b7` passed 
 | macOS ARM64 / macOS 14 | [Application, signature and portable package](https://github.com/qentrah/kyna-music/actions/runs/38350021366/job/115144612507) |
 
 These jobs build against Qt 6.8.3 and the pinned Kyna ABI 2 revision. The separate local macOS 6.11.2-Qt build also passed archive extraction into a relocated path containing spaces. Other CPU/OS combinations, production signatures and notarization are not established by these results.
+
+The macOS archive downloaded from that CI run was also extracted and run locally: playback decoded 882,000 frames, the second-process persistence test passed, the native launcher passed, and strict code-signature verification passed.
+
+## Preview source inventory
+
+The draft preview combines the three verified CI archives with their audit reports and SHA-256 checksums. Corresponding Qt 6.8.3 source archives, FFmpeg 7.1 source and its detached signature, the vendor public key, and the Qt 6.8.3 provisioning/build recipes accompany it. The FFmpeg signature was verified in an isolated temporary keyring against the [officially published key](https://ffmpeg.org/download.html), fingerprint `FCF986EA15E6E293A5644F10B4322F04D67658D8`. `SOURCE-INVENTORY.json` records the hashes and upstream locations. Production signing and final third-party license clearance remain separate publication gates.
