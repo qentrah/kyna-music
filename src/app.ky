@@ -1,0 +1,142 @@
+# Kyna owns navigation, filtering, playlists, likes, queue and playback decisions.
+# JSON is an explicit dynamic boundary; the native store validates persisted records.
+var library: any = {version: 1, tracks: [], playlists: [], volume: 0.65};
+var view: any = {view: "home", query: "", playlistId: "", heading: "On repeat", tracks: [], recommendations: [], playlists: [], current: {}, shuffle: false, repeat: false, showQueue: false, queueTracks: [], notice: ""};
+var queue: any = [];
+var history: any = [];
+var playlistSerial = 0;
+
+fn has(items: any, value: any): bool {
+    loop (var i=0; i<len(items); i=i+1) { if(items[i]==value) { return true; } }
+    return false;
+}
+fn track(id: str): any {
+    loop(var i=0; i<len(library.tracks); i=i+1) { if(library.tracks[i].id==id) { return library.tracks[i]; } }
+    return {id:"",title:"",artist:"",album:"",path:"",art:"",liked:false,duration:""};
+}
+fn playlist(id: str): any {
+    loop(var i=0; i<len(library.playlists); i=i+1) { if(library.playlists[i].id==id) { return library.playlists[i]; } }
+    return {id:"",name:"Playlist",tracks:[]};
+}
+fn visibleTracks(): any {
+    var result: any=[];
+    const query=textLower(view.query);
+    const list=playlist(view.playlistId);
+    loop(var i=0; i<len(library.tracks); i=i+1) {
+        const song=library.tracks[i];
+        var include=true;
+        if(view.view=="liked") { include=song.liked; }
+        if(view.view=="playlist") { include=has(list.tracks,song.id); }
+        if(query!="" && !textContains(textLower(song.title+" "+song.artist+" "+song.album),query)) { include=false; }
+        if(include) { push(result,song); }
+    }
+    return result;
+}
+fn render(): void {
+    view.tracks=visibleTracks(); view.recommendations=library.tracks; view.playlists=library.playlists;
+    view.heading="On repeat";
+    if(view.view=="library") { view.heading="Your music"; }
+    if(view.view=="liked") { view.heading="Liked songs"; }
+    if(view.view=="search") { view.heading="Search results"; }
+    if(view.view=="playlist") { view.heading=playlist(view.playlistId).name; }
+    view.queueTracks=[];
+    loop(var i=0; i<len(queue); i=i+1) { const song=track(queue[i]); if(song.id!="") { push(view.queueTracks,song); } }
+    musicRender(jsonStringify(view));
+}
+fn persist(): void { musicSave(jsonStringify(library)); }
+fn startTrack(id: str): void {
+    const song=track(id);
+    if(song.id=="") { return; }
+    musicPlay(song.path);
+    if(view.current.id!="" && view.current.id!=id) { push(history,view.current.id); }
+    view.current=song;
+    view.notice="";
+}
+fn nextTrack(): void {
+    if(len(library.tracks)==0) { return; }
+    if(len(queue)>0) { const id=dequeue(queue); startTrack(id); return; }
+    var index=0;
+    loop(var i=0; i<len(library.tracks); i=i+1) { if(library.tracks[i].id==view.current.id) { index=(i+1)%len(library.tracks); } }
+    if(view.shuffle && len(library.tracks)>1) {
+        var candidate=musicRandom(len(library.tracks));
+        if(library.tracks[candidate].id==view.current.id) { candidate=(candidate+1)%len(library.tracks); }
+        index=candidate;
+    }
+    startTrack(library.tracks[index].id);
+}
+fn removeAt(items: any, index: int): any {
+    var result: any=[];
+    loop(var i=0; i<len(items); i=i+1) { if(i!=index) { push(result,items[i]); } }
+    return result;
+}
+fn apply(action: str, payload: str): void {
+    try {
+    if(action=="navigate") { view.view=payload; view.query=""; }
+    else if(action=="search") { view.query=payload; view.view="search"; if(payload=="") { view.view="home"; } }
+    else if(action=="play") { startTrack(payload); }
+    else if(action=="toggle") { if(view.current.id=="") { nextTrack(); } else { musicToggle(); } }
+    else if(action=="next") { nextTrack(); }
+    else if(action=="previous") {
+        if(len(history)>0) { const id=pop(history); view.current=track(id); musicPlay(view.current.path); }
+        else if(view.current.id!="") { musicSeek(0); }
+    }
+    else if(action=="ended") { if(view.repeat && view.current.id!="") { musicPlay(view.current.path); } else { nextTrack(); } }
+    else if(action=="seek") { musicSeek(jsonParse(payload)); }
+    else if(action=="volume") { const volume=jsonParse(payload); musicVolume(volume); library.volume=volume; persist(); }
+    else if(action=="shuffle") { view.shuffle=!view.shuffle; }
+    else if(action=="repeat") { view.repeat=!view.repeat; }
+    else if(action=="queue") { view.showQueue=!view.showQueue; }
+    else if(action=="enqueue") { if(track(payload).id!="") { push(queue,payload); view.notice="Added to your queue"; } }
+    else if(action=="queue-remove") { queue=removeAt(queue,jsonParse(payload)); }
+    else if(action=="dismiss") { view.notice=""; }
+    else if(action=="error") { view.notice="Playback failed: "+payload; }
+    else if(action=="play-all") {
+        const songs=visibleTracks(); queue=[];
+        if(len(songs)>0) { loop(var i=1; i<len(songs); i=i+1) { push(queue,songs[i].id); } startTrack(songs[0].id); }
+        else { view.notice="Add songs to this collection first"; }
+    }
+    else if(action=="like") {
+        const song=track(payload);
+        if(song.id!="") { song.liked=!song.liked; if(view.current.id==song.id) { view.current=song; } persist(); }
+    }
+    else if(action=="playlist") { view.playlistId=payload; view.view="playlist"; view.query=""; }
+    else if(action=="playlist-create") {
+        if(payload=="" || len(payload)>80) { view.notice="Use a playlist name between 1 and 80 characters"; return; }
+        playlistSerial=playlistSerial+1;
+        var id="playlist-"+len(library.playlists)+"-"+playlistSerial;
+        while(playlist(id).id!="") { playlistSerial=playlistSerial+1; id="playlist-"+len(library.playlists)+"-"+playlistSerial; }
+        push(library.playlists,{id:id,name:payload,tracks:[]});
+        view.playlistId=id;view.view="playlist";view.query="";view.notice="Use a song's menu to add it to this playlist";persist();
+    }
+    else if(action=="playlist-add") {
+        const ids=jsonParse(payload); const list=playlist(ids[0]);const song=track(ids[1]);
+        if(list.id!="" && song.id!="" && !has(list.tracks,song.id)) { push(list.tracks,song.id);view.notice="Added to "+list.name;persist(); }
+    }
+    else if(action=="playlist-remove") {
+        const list=playlist(view.playlistId);var ids: any=[];
+        loop(var i=0; i<len(list.tracks); i=i+1) { if(list.tracks[i]!=payload) { push(ids,list.tracks[i]); } }
+        list.tracks=ids;persist();
+    }
+    else if(action=="playlist-delete") {
+        var lists: any=[];loop(var i=0; i<len(library.playlists); i=i+1) { if(library.playlists[i].id!=view.playlistId) { push(lists,library.playlists[i]); } }
+        library.playlists=lists;view.view="home";view.playlistId="";view.notice="Playlist deleted";persist();
+    }
+    else if(action=="import") {
+        const additions=jsonParse(musicImport(payload));var count=0;
+        loop(var i=0; i<len(additions); i=i+1) { if(track(additions[i].id).id=="") { push(library.tracks,additions[i]);count=count+1; } }
+        view.view="library";view.query="";view.notice="Added "+count+" songs to your library";persist();
+    }
+    } catch(failure) { view.notice=""+failure;console.log("MUSIC_ERROR",failure); }
+}
+export fn dispatch(action: str, payload: str): void {
+    apply(action,payload);
+    render();
+}
+export fn initialize(): void {
+    musicOpen();
+    view.current=track("");
+    try { library=jsonParse(musicLoad());musicVolume(library.volume); }
+    catch(failure) { view.notice="Could not load your saved library: "+failure; }
+    musicOnEvent(dispatch);render();
+}
+export fn snapshot(): any { return view; }

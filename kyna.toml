@@ -1,0 +1,4 @@
+[project]
+name = "kyna-music"
+version = "1.0.0"
+entry = "main.ky"

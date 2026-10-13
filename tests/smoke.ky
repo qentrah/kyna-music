@@ -1,0 +1,57 @@
+import { initialize, dispatch, snapshot } from "../src/app.ky";
+fn require(condition: bool, message: str): void { if(!condition) { throw message; } }
+initialize();
+dispatch("volume","0");
+require(len(snapshot().tracks)==6,"demo library");
+dispatch("search","NIGHT");
+require(len(snapshot().tracks)==1 && snapshot().tracks[0].id=="demo-03","case-insensitive search");
+dispatch("navigate","liked");
+require(len(snapshot().tracks)==2,"initial likes");
+dispatch("like","demo-02");
+require(len(snapshot().tracks)==3,"persisted like");
+dispatch("playlist-create","Playback checks");
+const playlistId=snapshot().playlistId;
+dispatch("playlist-add",jsonStringify([playlistId,"demo-02"]));
+require(len(snapshot().tracks)==1,"playlist add");
+dispatch("playlist-remove","demo-02");
+require(len(snapshot().tracks)==0,"playlist remove");
+dispatch("playlist-add",jsonStringify([playlistId,"demo-02"]));
+dispatch("navigate","library");
+dispatch("play-all","");
+require(len(snapshot().queueTracks)==5,"play-all queue");
+collectGarbage();
+fn finish(): void {
+    try {
+        const status=jsonParse(musicStatus());
+        require(status.decodedFrames>0 && status.playing,"retained callback and second-track decoding");
+        const saved=jsonParse(musicLoad());
+        require(len(saved.playlists)==3 && saved.tracks[1].liked,"saved library survives reload");
+        console.log("MUSIC_SMOKE_OK",status.decodedFrames,snapshot().current.title);
+        musicQuit();
+    } catch(failure) { throw failure; }
+}
+fn verifyPlayback(): void {
+    try {
+        const status=jsonParse(musicStatus());
+        console.log("DECODE_STATUS",musicStatus());
+        require(status.playing && status.position>0 && status.duration==40000 && status.decodedFrames>0,"real audio decoding and duration");
+        dispatch("toggle","");
+        require(!jsonParse(musicStatus()).playing,"pause");
+        dispatch("seek","12000");
+        require(jsonParse(musicStatus()).position==12000,"seek");
+        dispatch("next","");
+        require(snapshot().current.id=="demo-02" && len(snapshot().queueTracks)==4,"next dequeues track");
+        dispatch("previous","");require(snapshot().current.id=="demo-01","previous history");
+        dispatch("play","demo-02");
+        var rejected=false;
+        try { musicVolume(2.0); } catch(failure) { rejected=true; }
+        require(rejected,"volume validation");
+        rejected=false;
+        try { musicSeek(-1); } catch(failure) { rejected=true; }
+        require(rejected,"seek validation");
+        musicAfter(1200,finish);collectGarbage();
+    } catch(failure) { throw failure; }
+}
+musicAfter(1800,verifyPlayback);
+collectGarbage();
+musicRun();

@@ -1,0 +1,64 @@
+name: Desktop application
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  app:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, qt: linux_gcc_64, target: linux-x86_64}
+          - {os: macos-14, qt: clang_64, target: darwin-arm64}
+          - {os: windows-latest, qt: win64_msvc2022_64, target: windows-x86_64}
+    runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.vcpkg-cache,readwrite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: qentrah/Kyna
+          ref: 9d33bfb898f3e8261a2a2dde7e8cc579bb54092d
+          path: .deps/kyna
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - uses: actions/cache@v4
+        with:
+          path: .vcpkg-cache
+          key: music-core-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.deps/kyna/vcpkg.json') }}
+      - uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgJsonGlob: .deps/kyna/vcpkg.json
+      - uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          arch: ${{ matrix.qt }}
+          modules: qtmultimedia
+          cache: true
+      - name: Linux runtime tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y patchelf xvfb libxcb-cursor0 libegl1 pulseaudio
+      - name: Build Kyna
+        shell: bash
+        run: |
+          cmake -S .deps/kyna -B .deps/kyna/build -DCMAKE_BUILD_TYPE=Release -DKYNA_BUILD_TESTS=OFF -DKYNA_FETCH_DEPENDENCIES=OFF -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+          cmake --build .deps/kyna/build --config Release --parallel 3
+      - name: Build and type check application
+        run: python tools/build.py build
+      - name: Test application on Linux
+        if: runner.os == 'Linux'
+        run: |
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=music_test
+          xvfb-run -a python tools/build.py test
+      - name: Test application on Windows and macOS
+        if: runner.os != 'Linux'
+        run: python tools/build.py test
+      - name: Package portable application
+        run: python tools/build.py package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kyna-music-${{ matrix.target }}
+          path: build/package
+          if-no-files-found: error

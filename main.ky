@@ -1,0 +1,5 @@
+import { initialize } from "./src/app.ky";
+initialize();
+musicIcon(":/music/ui/icons/app.svg");
+collectGarbage();
+musicRun();
