@@ -4,11 +4,12 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 ApplicationWindow {
     id: window
-    visible: true; width: 1320; height: 820; minimumWidth: 900; minimumHeight: 700
+    visible: true; width: app.compact ? 980 : 1320; height: 820; minimumWidth: 900; minimumHeight: 700
     title: "Kyna Music"; color: "#000000"
     font.family: "Helvetica Neue"
     palette.window: "#242424"; palette.windowText: "#f1f4f1"; palette.text: "#f1f4f1"; palette.buttonText: "#f1f4f1"; palette.base: "#181818"; palette.button: "#282828"; palette.highlight: "#1db954"
     property var app: music.state
+    Shortcut { sequence: "Ctrl+Shift+L"; onActivated: music.send("compact") }
     Shortcut { sequence: "Ctrl+O"; onActivated: files.open() }
     Shortcut { sequence: "Ctrl+F"; onActivated: search.forceActiveFocus() }
     Shortcut { sequence: "Space"; enabled: !search.activeFocus && !playlistName.activeFocus; onActivated: music.send("toggle") }
@@ -78,6 +79,7 @@ ApplicationWindow {
                 }
                 Item { Layout.fillWidth: true }
                 Text { text: "YOUR MUSIC. YOUR SPACE."; visible: main.width>880; color: "#738a7b"; font.pixelSize: 9; font.letterSpacing: 1.6 }
+                IconButton { iconName: "library"; label: window.app.compact ? "Use wide window" : "Use compact window"; selected: !!window.app.compact; onClicked: music.send("compact") }
                 Rectangle { width: 31; height: 31; radius: 16; color: "#bccf9e"; Text { anchors.centerIn: parent; text: "K"; font.pixelSize: 13; font.weight: Font.Bold; color: "#203524" } Accessible.name: "Local music library" }
             }
         }

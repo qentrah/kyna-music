@@ -2,6 +2,9 @@ import { initialize, dispatch, snapshot } from "../src/app.ky";
 fn require(condition: bool, message: str): void { if(!condition) { throw message; } }
 initialize();
 dispatch("volume","0");
+dispatch("compact","");
+require(snapshot().compact,"compact window state");
+dispatch("compact","");
 require(len(snapshot().tracks)==6,"demo library");
 dispatch("search","NIGHT");
 require(len(snapshot().tracks)==1 && snapshot().tracks[0].id=="demo-03","case-insensitive search");

@@ -21,10 +21,10 @@ for name in ('main.ky','kyna.toml'):shutil.copy2(root/name,project/name)
 for name in ('src','tests'):shutil.copytree(root/name,project/name)
 subprocess.run([str(ky),'--native-library',str(native),'build','main.ky','--output',str(out/'checked')],cwd=project,check=True)
 if sys.platform=='darwin':
- app=out/'Kyna Music.app';contents=app/'Contents';binary=contents/'MacOS';resources=contents/'Resources'
- binary.mkdir(parents=True);resources.mkdir()
+ app=out/'Kyna Music.app';contents=app/'Contents';resources=contents/'Resources';binary=resources/'runtime'
+ binary.mkdir(parents=True);(contents/'MacOS').mkdir()
  if not a.launcher:raise SystemExit('--launcher is required on macOS')
- shutil.copy2(a.launcher,binary/'KynaMusic')
+ shutil.copy2(a.launcher,contents/'MacOS/KynaMusic')
  (contents/'Info.plist').write_bytes(plistlib.dumps({'CFBundleName':'Kyna Music','CFBundleDisplayName':'Kyna Music','CFBundleIdentifier':'org.kyna.music','CFBundleExecutable':'KynaMusic','CFBundlePackageType':'APPL','CFBundleShortVersionString':'1.0.0','CFBundleVersion':'1','NSHighResolutionCapable':True,'NSHumanReadableCopyright':'Kyna Music contributors. See Resources/licenses.'}))
 else:
  app=out/'KynaMusic';binary=app/'bin';resources=app;binary.mkdir(parents=True)
@@ -68,7 +68,10 @@ if sys.platform=='darwin':
   if path.is_file():path.chmod(path.stat().st_mode | 0o200)
  for framework in sorted(app.rglob('*.framework')):
   subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
- subprocess.run(['codesign','--force','--deep','--sign','-',str(app)],check=True)
+ # Framework signing changes binary signatures. Refresh hashes before sealing the app.
+ for record in inventory['binaries']:record['sha256']=digest(binary/record['path'])
+ (binary/'runtime-inventory.json').write_text(json.dumps(inventory,indent=2)+'\n')
+ subprocess.run(['codesign','--force','--sign','-',str(app)],check=True)
  subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 elif sys.platform=='win32':
  (app/'KynaMusic.cmd').write_text('@echo off\r\ncd /d "%~dp0app"\r\n"%~dp0bin\\ky.exe" --native-library "%~dp0bin\\'+native.name+'" run main.ky\r\n')

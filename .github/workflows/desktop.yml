@@ -46,7 +46,13 @@ jobs:
       - name: Linux runtime tools
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y patchelf xvfb libxcb-cursor0 libegl1 pulseaudio
+      - uses: actions/cache@v4
+        id: kyna-runtime
+        with:
+          path: .deps/kyna/build
+          key: kyna-runtime-v1-${{ runner.os }}-${{ runner.arch }}-9d33bfb
       - name: Build Kyna
+        if: steps.kyna-runtime.outputs.cache-hit != 'true'
         shell: bash
         run: |
           cmake -S .deps/kyna -B .deps/kyna/build -DCMAKE_BUILD_TYPE=Release -DKYNA_BUILD_TESTS=OFF -DKYNA_FETCH_DEPENDENCIES=OFF -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"

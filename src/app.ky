@@ -1,7 +1,7 @@
 # Kyna owns navigation, filtering, playlists, likes, queue and playback decisions.
 # JSON is an explicit dynamic boundary; the native store validates persisted records.
 var library: any = {version: 1, tracks: [], playlists: [], volume: 0.65};
-var view: any = {view: "home", query: "", playlistId: "", heading: "On repeat", tracks: [], recommendations: [], playlists: [], current: {}, shuffle: false, repeat: false, showQueue: false, queueTracks: [], notice: ""};
+var view: any = {view: "home", compact: false, query: "", playlistId: "", heading: "On repeat", tracks: [], recommendations: [], playlists: [], current: {}, shuffle: false, repeat: false, showQueue: false, queueTracks: [], notice: ""};
 var queue: any = [];
 var history: any = [];
 var playlistSerial = 0;
@@ -83,6 +83,7 @@ fn apply(action: str, payload: str): void {
     else if(action=="ended") { if(view.repeat && view.current.id!="") { musicPlay(view.current.path); } else { nextTrack(); } }
     else if(action=="seek") { musicSeek(jsonParse(payload)); }
     else if(action=="volume") { const volume=jsonParse(payload); musicVolume(volume); library.volume=volume; persist(); }
+    else if(action=="compact") { view.compact=!view.compact; }
     else if(action=="shuffle") { view.shuffle=!view.shuffle; }
     else if(action=="repeat") { view.repeat=!view.repeat; }
     else if(action=="queue") { view.showQueue=!view.showQueue; }

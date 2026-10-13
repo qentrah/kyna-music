@@ -21,6 +21,8 @@ python tools/build.py package --kyna-root ../Kyna --ky ../Kyna/build-native/bin/
 
 On macOS install build dependencies with `brew install cmake qtbase qtdeclarative qtmultimedia qtsvg`. On Windows use MSVC and Qt's matching MSVC kit; on Linux use Qt's GCC kit, an audio server and `patchelf` for packaging. The GitHub workflow builds the language and application from source on each platform. Windows/macOS/Linux artifacts are verified only when that platform's application tests pass.
 
+Use the layout button beside the search field (or Ctrl+Shift+L) to switch between compact and wide windows; the toggle is handled in Kyna.
+
 `tools/build.py` automates configure, compile, Kyna checking, application tests and portable packaging. Packaging runs **`ky build main.ky`**, copies the checked Kyna modules and includes the native runtime closure with SHA-256 inventories. Recipients do not need a compiler or Qt SDK. Local macOS packages are ad-hoc signed, not notarized.
 
 ## What is written in Kyna?
