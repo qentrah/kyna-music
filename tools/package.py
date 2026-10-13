@@ -48,7 +48,13 @@ for name in ('QtQml','QtQuick'):
 # Include the native audio backend and platform/style/image plugins.
 for name in ('platforms','imageformats','multimedia','styles','tls','networkinformation'):
  if (plugins/name).is_dir():copy_regular_tree(plugins/name,binary/'qt/plugins'/name)
-searches=[pathlib.Path(queries[k]) for k in ('QT_INSTALL_LIBS','QT_INSTALL_BINS') if k in queries]
+# Official Windows Qt SDKs contain both debug and release plugins. Ship the
+# release peer only; debug plugins require non-redistributable debug CRT DLLs.
+if os.name=='nt':
+ for dll in (binary/'qt').rglob('*.dll'):
+  if dll.stem.endswith('d') and dll.with_name(dll.stem[:-1]+dll.suffix).is_file():dll.unlink()
+searches=[ky.parent]+[pathlib.Path(queries[k]) for k in ('QT_INSTALL_LIBS','QT_INSTALL_BINS') if k in queries]
+if os.name=='nt':searches+=list((repo/'build/vcpkg_installed').glob('*/bin'))
 if sys.platform=='darwin':
  # Homebrew splits Qt into formulae; official Qt uses the first search directory.
  searches += list(pathlib.Path('/opt/homebrew/opt').glob('qt*/lib'))
