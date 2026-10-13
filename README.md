@@ -54,3 +54,7 @@ Import local audio with **Add music**. Original files stay in place. Library met
 ## License
 
 Application source: MIT. Original demonstration audio, covers and icons: CC0. Qt and its dependencies retain their own licenses. Packages include dependency inventories and notices. See `LICENSE` and `LICENSE-ASSETS.txt`.
+
+## Project links
+
+[Source](https://github.com/qentrah/kyna-music) · [Issues](https://github.com/qentrah/kyna-music/issues) · [Public project directory](https://github.com/qentrah/.github/blob/main/profile/PROJECTS.md)
