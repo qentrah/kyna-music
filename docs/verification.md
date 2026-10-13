@@ -9,3 +9,5 @@ Rams quick_review (`via: rules`) was attempted after UI changes. It returned exh
 Portable packaging recursively relocates dependency paths, records binary hashes, signs macOS bundles ad hoc and verifies their signature. Production signing/notarization and storefront publication are not part of this preview.
 
 The complete local macOS bundle passed its audio smoke with Qt/QML environment paths pointed at nonexistent SDK locations. Apple `codesign --verify --deep --strict` passed. Packaged home, library/queue and search screenshots are saved in `docs/screenshots`.
+
+The 25.5-second video in `docs/videos/kyna-music-macos.mp4` records actual app frames: playback, navigation, play-all queue and live search. It has no audio track. The compact screenshot verifies the 980-pixel layout with the right panel hidden and the transport retained.

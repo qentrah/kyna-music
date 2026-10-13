@@ -6,7 +6,7 @@ The desktop layout studies Spotify's library, album grids, now-playing panel and
 
 ![Kyna Music running on macOS](docs/screenshots/home-macos.png)
 
-[Library and queue](docs/screenshots/library-queue-macos.png) · [Search](docs/screenshots/search-macos.png)
+[Library and queue](docs/screenshots/library-queue-macos.png) · [Search](docs/screenshots/search-macos.png) · [Compact layout](docs/screenshots/compact-macos.png) · [Working app video](docs/videos/kyna-music-macos.mp4)
 
 ## Run and build
 
