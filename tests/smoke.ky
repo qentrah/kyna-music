@@ -26,6 +26,11 @@ fn finish(): void {
         require(status.decodedFrames>0 && status.playing,"retained callback and second-track decoding");
         const saved=jsonParse(musicLoad());
         require(len(saved.playlists)==3 && saved.tracks[1].liked,"saved library survives reload");
+        dispatch("import",jsonStringify(["build/demo/01.wav","build/demo/01.wav"]));
+        require(len(snapshot().tracks)==7,"duplicate local-file imports are idempotent");
+        var rejected=false;
+        try { musicImport("[2]"); } catch(failure) { rejected=true; }
+        require(rejected,"invalid import conversion rejected");
         console.log("MUSIC_SMOKE_OK",status.decodedFrames,snapshot().current.title);
         musicQuit();
     } catch(failure) { throw failure; }

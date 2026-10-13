@@ -1,5 +1,12 @@
 name: Desktop application
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    paths-ignore: ['docs/**', 'README.md']
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: music-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -57,8 +64,21 @@ jobs:
         run: python tools/build.py test
       - name: Package portable application
         run: python tools/build.py package
+      - name: Verify packaged application without SDK paths
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            xvfb-run -a python tools/verify_package.py build/package
+          else
+            python tools/verify_package.py build/package
+          fi
       - uses: actions/upload-artifact@v4
         with:
           name: kyna-music-${{ matrix.target }}
-          path: build/package
+          path: |
+            build/package/*.zip
+            build/package/*.tar.gz
+            build/package/*SHA256SUMS
+            build/package/BUNDLE-AUDIT.json
+            build/package/sources
           if-no-files-found: error

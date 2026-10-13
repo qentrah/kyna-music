@@ -5,3 +5,9 @@ The visual pass inspected the [Spotify desktop redesign screenshot](https://imag
 This implementation keeps its own Kyna Music identity and local-library behavior. Artwork, labels, window decorations and responsive breakpoints differ; pixel-perfect equivalence has not been established. Below 1200 pixels the now-playing panel collapses, and the album grid and transport adapt to the remaining width.
 
 All bundled covers (`ui/art`), control icons (`ui/icons`) and generated WAVs (`tools/generate_demo.py`) are original CC0 assets. No reference screenshot is bundled as an application asset. Technical references: [QMediaPlayer](https://doc.qt.io/qt-6/qmediaplayer.html), [QAudioDecoder](https://doc.qt.io/qt-6/qaudiodecoder.html).
+
+## Official reference
+
+[Spotify’s desktop design announcement](https://newsroom.spotify.com/2023-06-20/spotify-desktop-experience-redesign-your-library-now-playing-views-customize/) explains its resizable library and now-playing columns. The following image was also inspected. It belongs to Spotify and is linked as design reference; it is not included in the app or covered by this repository’s CC0 asset license.
+
+![Spotify’s official desktop reference](https://storage.googleapis.com/pr-newsroom-wp/1/2023/06/Screenshot-2023-06-20-at-8.04.43-AM-1.png)
