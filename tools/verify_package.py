@@ -17,4 +17,6 @@ with tempfile.TemporaryDirectory(prefix='music-shipped-') as directory:
  env['PATH']=os.path.join(os.environ.get('SystemRoot','C:/Windows'),'System32') if os.name=='nt' else '/usr/bin:/bin'
  for script in ('smoke.ky','reload.ky'):
   subprocess.run([str(ky),'--native-library',str(module),'run',str(source/'tests'/script)],cwd=pathlib.Path(__file__).resolve().parents[1],env=env,check=True,timeout=45)
+ launcher=app/'MacOS/KynaMusic' if sys.platform=='darwin' else app/('KynaMusic.exe' if os.name=='nt' else 'KynaMusic')
+ subprocess.run([str(launcher),'--smoke'],env=env,check=True,timeout=20)
 print('PORTABLE_MUSIC_OK')

@@ -25,9 +25,19 @@ if sys.platform=='darwin':
  binary.mkdir(parents=True);(contents/'MacOS').mkdir()
  if not a.launcher:raise SystemExit('--launcher is required on macOS')
  shutil.copy2(a.launcher,contents/'MacOS/KynaMusic')
- (contents/'Info.plist').write_bytes(plistlib.dumps({'CFBundleName':'Kyna Music','CFBundleDisplayName':'Kyna Music','CFBundleIdentifier':'org.kyna.music','CFBundleExecutable':'KynaMusic','CFBundlePackageType':'APPL','CFBundleShortVersionString':'1.0.0','CFBundleVersion':'1','NSHighResolutionCapable':True,'NSHumanReadableCopyright':'Kyna Music contributors. See Resources/licenses.'}))
+ (contents/'Info.plist').write_bytes(plistlib.dumps({'CFBundleName':'Kyna Music','CFBundleDisplayName':'Kyna Music','CFBundleIdentifier':'org.kyna.music','CFBundleExecutable':'KynaMusic','CFBundlePackageType':'APPL','CFBundleShortVersionString':'1.0.0','CFBundleVersion':'1','CFBundleIconFile':'KynaMusic.icns','NSHighResolutionCapable':True,'NSHumanReadableCopyright':'Kyna Music contributors. See Resources/licenses.'}))
 else:
  app=out/'KynaMusic';binary=app/'bin';resources=app;binary.mkdir(parents=True)
+renderer=a.launcher.resolve().parent/('music_icon_renderer.exe' if os.name=='nt' else 'music_icon_renderer')
+subprocess.run([str(renderer),str(root/'ui/icons/app.svg'),str(resources/'app-icon.png'),'512'],check=True)
+if sys.platform=='darwin':
+ iconset=out/'KynaMusic.iconset';iconset.mkdir()
+ for size in (16,32,128,256,512):
+  for scale in (1,2):
+   name='icon_'+str(size)+'x'+str(size)+('@2x' if scale==2 else '')+'.png'
+   subprocess.run([str(renderer),str(root/'ui/icons/app.svg'),str(iconset/name),str(size*scale)],check=True)
+ subprocess.run(['iconutil','-c','icns',str(iconset),'-o',str(resources/'KynaMusic.icns')],check=True)
+ shutil.rmtree(iconset)
 shutil.copy2(ky,binary/ky.name);shutil.copy2(native,binary/native.name)
 shutil.copytree(out/'checked/app',resources/'app')
 # Copy QML modules used by the app, including their declared runtime dependencies.
@@ -73,10 +83,9 @@ if sys.platform=='darwin':
  (binary/'runtime-inventory.json').write_text(json.dumps(inventory,indent=2)+'\n')
  subprocess.run(['codesign','--force','--sign','-',str(app)],check=True)
  subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
-elif sys.platform=='win32':
- (app/'KynaMusic.cmd').write_text('@echo off\r\ncd /d "%~dp0app"\r\n"%~dp0bin\\ky.exe" --native-library "%~dp0bin\\'+native.name+'" run main.ky\r\n')
 else:
- launcher=app/'KynaMusic';launcher.write_text('#!/bin/sh\nset -eu\nAPP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"\ncd "$APP_DIR/app"\nexec "$APP_DIR/bin/ky" --native-library "$APP_DIR/bin/'+native.name+'" run main.ky\n');launcher.chmod(0o755)
+ if not a.launcher:raise SystemExit('--launcher is required for desktop packaging')
+ shutil.copy2(a.launcher,app/('KynaMusic.exe' if os.name=='nt' else 'KynaMusic'))
 shutil.rmtree(out/'checked');shutil.rmtree(project)
 (out/'BUNDLE-AUDIT.json').write_text(json.dumps({'schema':'kyna.music-bundle/v1','native_abi':2,'qt':queries['QT_VERSION'],'production_signed':False,'binaries':len(inventory['binaries'])},indent=2)+'\n')
 (out/'SHA256SUMS').write_text(''.join(digest(f)+'  '+f.relative_to(out).as_posix()+'\n' for f in sorted(app.rglob('*')) if f.is_file()))

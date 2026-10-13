@@ -37,7 +37,20 @@ qt_add_resources(music_bridge "music_demo" PREFIX "/music/demo" BASE "${CMAKE_CU
  "${CMAKE_CURRENT_BINARY_DIR}/demo/03.wav" "${CMAKE_CURRENT_BINARY_DIR}/demo/04.wav"
  "${CMAKE_CURRENT_BINARY_DIR}/demo/05.wav" "${CMAKE_CURRENT_BINARY_DIR}/demo/06.wav")
 
-if(APPLE)
- add_executable(music_launcher src/entry/music_launcher.cpp)
- target_compile_features(music_launcher PRIVATE cxx_std_20)
+add_executable(music_launcher WIN32 src/entry/music_launcher.cpp)
+target_compile_features(music_launcher PRIVATE cxx_std_20)
+if(WIN32)
+ target_link_libraries(music_launcher PRIVATE user32)
+endif()
+add_executable(music_icon_renderer src/packaging/icon_renderer.cpp)
+target_compile_features(music_icon_renderer PRIVATE cxx_std_20)
+target_link_libraries(music_icon_renderer PRIVATE Qt6::Gui)
+if(WIN32)
+ enable_language(RC)
+ add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/music.ico"
+  COMMAND music_icon_renderer "${APP_ROOT}/ui/icons/app.svg" "${CMAKE_CURRENT_BINARY_DIR}/music.ico" 256
+  DEPENDS music_icon_renderer "${APP_ROOT}/ui/icons/app.svg")
+ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/music.rc" "1 ICON \"${CMAKE_CURRENT_BINARY_DIR}/music.ico\"\n")
+ set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/music.rc" PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/music.ico")
+ target_sources(music_launcher PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/music.rc" "${CMAKE_CURRENT_BINARY_DIR}/music.ico")
 endif()

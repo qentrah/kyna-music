@@ -29,5 +29,5 @@ elif a.action=='test':
   run(cmd+['run','tests/reload.ky'],env=env,timeout=15)
 elif a.action=='package':
  args=[sys.executable,ROOT/'tools/package.py','--ky',ky,'--native',module,'--kyna-root',repo,'--qtpaths',a.qtpaths,'--output',a.output]
- if sys.platform=='darwin':args+=['--launcher',build/'music_launcher']
+ args+=['--launcher',build/('Release/music_launcher.exe' if os.name=='nt' else 'music_launcher')]
  run(args)

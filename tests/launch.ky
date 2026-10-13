@@ -1,0 +1,7 @@
+import { initialize } from "../src/app.ky";
+initialize();
+musicIcon(":/music/ui/icons/app.svg");
+fn stop(): void { console.log("MUSIC_LAUNCH_OK"); musicQuit(); }
+musicAfter(250,stop);
+collectGarbage();
+musicRun();

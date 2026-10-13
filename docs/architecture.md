@@ -1,6 +1,6 @@
 # Application architecture
 
-The VM runs `main.ky`, which initializes Kyna state and subscribes one typed `fn(str, str): void` event handler. Qt clicks enqueue action/payload pairs on the UI thread; Kyna processes them and sends a new JSON view to QML. Qt does not own playlist or queue decisions.
+The VM runs `main.ky`, which initializes Kyna state and subscribes one typed `fn(str, str): void` event handler. First use rejects non-main threads before creating any Qt application. Qt clicks enqueue action/payload pairs on the UI thread; Kyna processes them and sends a new JSON view to QML. Qt does not own playlist or queue decisions.
 
 `music_bridge` publishes a versioned C ABI descriptor shared by `ky check` and runtime registration. All calls cross guarded exception boundaries and validate native conversions. Event callbacks and timers are retained until replacement, delivery or session destruction. Timers use the bridge as their Qt context, so destruction cancels pending delivery. QML objects disappear before the bridge and the application.
 
