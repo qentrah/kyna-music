@@ -1,5 +1,6 @@
 # Separate VM process verifies the previous smoke run's atomic persistence.
 musicOpen();
+try {
 const saved=jsonParse(musicLoad());
 if(len(saved.playlists)!=3 || !saved.tracks[1].liked) { throw "cross-process persistence failed"; }
 var invalid=false;
@@ -9,3 +10,5 @@ invalid=false;
 try { musicIcon("/definitely/missing/icon.png"); } catch(error) { invalid=true; }
 if(!invalid) { throw "missing icon accepted"; }
 console.log("MUSIC_RELOAD_OK");
+
+} catch(error) { throw error; }

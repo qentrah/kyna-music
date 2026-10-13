@@ -7,3 +7,5 @@ macOS native playback passed locally with 882,000 decoded frames per original tr
 Rams quick_review (`via: rules`) was attempted after UI changes. It returned exhausted one-time workspace credits, with no review findings. This is not a Rams approval.
 
 Portable packaging recursively relocates dependency paths, records binary hashes, signs macOS bundles ad hoc and verifies their signature. Production signing/notarization and storefront publication are not part of this preview.
+
+The complete local macOS bundle passed its audio smoke with Qt/QML environment paths pointed at nonexistent SDK locations. Apple `codesign --verify --deep --strict` passed. Packaged home, library/queue and search screenshots are saved in `docs/screenshots`.

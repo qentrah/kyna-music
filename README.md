@@ -4,6 +4,10 @@ A native desktop music player built with the **Kyna language**. Search your loca
 
 The desktop layout studies Spotify's library, album grids, now-playing panel and fixed transport. Kyna Music is independent; it does not connect to Spotify or include its commercial recordings.
 
+![Kyna Music running on macOS](docs/screenshots/home-macos.png)
+
+[Library and queue](docs/screenshots/library-queue-macos.png) · [Search](docs/screenshots/search-macos.png)
+
 ## Run and build
 
 Requirements: Python 3.10+, CMake 3.25+, a C++20 compiler, Qt 6.8+ with Quick, Quick Controls and Multimedia, and [Kyna](https://github.com/qentrah/Kyna). The pinned CI checkout is `9d33bfb898f3e8261a2a2dde7e8cc579bb54092d` (native ABI 2).
