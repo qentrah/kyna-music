@@ -45,7 +45,7 @@ musicIcon(":/music/ui/icons/app.svg");
 # Or supply a readable local PNG/SVG file.
 ```
 
-See [architecture and bindings](docs/architecture.md), [visual references](docs/references.md), and [verification](docs/verification.md).
+Read the [step-by-step Kyna build tour](docs/build-tour.md). See [architecture and bindings](docs/architecture.md), [visual references](docs/references.md), and [verification](docs/verification.md).
 
 ## Files and privacy
 
