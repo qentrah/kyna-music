@@ -49,6 +49,17 @@ shutil.copy2(root/'LICENSE',licenses/'KynaMusic-MIT.txt');shutil.copy2(root/'LIC
 shutil.copytree(repo/'docs/licenses/native',licenses/'native')
 (licenses/'QT-SOURCES.txt').write_text('Qt '+queries['QT_VERSION']+' is dynamically linked. You may replace these libraries with ABI-compatible builds.\nCorresponding source: https://download.qt.io/archive/qt/'+'.'.join(queries['QT_VERSION'].split('.')[:2])+'/'+queries['QT_VERSION']+'/single/\nBuild instructions: https://doc.qt.io/qt-6/build-sources.html\nQt Multimedia codecs and platform dependencies vary by target; see runtime-inventory.json.\n')
 if sys.platform=='darwin':
+ # Restore the versioned framework structure expected by Apple's bundle signer.
+ for framework in sorted(app.rglob('*.framework')):
+  versions=framework/'Versions';version=next(p for p in versions.iterdir() if p.is_dir() and p.name!='Current')
+  (versions/'Current').symlink_to(version.name)
+  (framework/framework.stem).symlink_to('Versions/Current/'+framework.stem)
+  if (framework/'Resources').exists():shutil.rmtree(framework/'Resources')
+  (framework/'Resources').symlink_to('Versions/Current/Resources')
+ for path in app.rglob('*'):
+  if path.is_file():path.chmod(path.stat().st_mode | 0o200)
+ for framework in sorted(app.rglob('*.framework')):
+  subprocess.run(['codesign','--force','--sign','-',str(framework)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
  subprocess.run(['codesign','--force','--deep','--sign','-',str(app)],check=True)
  subprocess.run(['codesign','--verify','--deep','--strict',str(app)],check=True)
 elif sys.platform=='win32':
